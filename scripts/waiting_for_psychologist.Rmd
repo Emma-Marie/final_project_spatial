@@ -224,7 +224,7 @@ population_map <- tm_shape(waiting_midt["total_youngpop"]) +
   tm_layout(frame = FALSE, legend.position = c("right", "top")) 
 
 average_waiting_map <- tm_shape(waiting_midt["average_waiting"]) + 
-  tm_polygons("average_waiting", palette = "Reds", title = "Witing time (weeks)", style = "jenks") +
+  tm_polygons("average_waiting", palette = "Reds", title = "Waiting time (weeks)", style = "jenks") +
   tm_layout(frame = FALSE, legend.position = c("right", "top")) 
 
 # Show the two maps
@@ -244,34 +244,39 @@ tmap_arrange(population_map, average_waiting_map)
 dev.off()
 ```
 
-## Plot number of clinics
+## Plot relative number of clinics
+
+Calculating the number of psycologist practices relative to the young population in each municipality:
+
+```{r relative-practices}
+
+# calculate number of practices pr. 100 young persons in each municipality
+
+waiting_midt$relative_practices = waiting_midt$practices_number/(waiting_midt$total_youngpop/100)
+
+```
+
+
+Now it's time to plot the relative number of practices so they can be compared with the waiting times: 
 
 ```{r practices-bubbles}
 
 # create centroid for each municipality
 centroids <- st_centroid(waiting_midt)
 
-plot(waiting_midt$geometry);plot(centroids, add = TRUE)
-
 # use tmap to create a bubble (connected to each centroids) with a size corresponding to the number of practices
 
-tm_shape(waiting_cartogram) + 
-  tm_polygons("total_youngpop", palette = "YlGn", title = "Population age 18-24", style = "jenks") +
+tm_shape(waiting_midt) + 
+  tm_polygons("average_waiting", palette = "Reds", title = "Waiting time in weeks", style = "jenks") +
   tm_layout(frame = FALSE, legend.position = c("right", "top")) +
-  tm_bubbles(size = waiting_midt$average_waiting, col = "pink", alpha = 1, border.col = "red",
-  border.lwd = 1, border.alpha = NA, scale = 1, size.lim = NA,
-  sizes.legend = NULL, sizes.legend.labels = NULL, n = 5,
-  style = "pretty", palette = NULL, labels = NULL,
-  auto.palette.mapping = TRUE, contrast = 1, max.categories = 12)
-
+  tm_shape(centroids) +
+  tm_bubbles(size = "relative_practices", scale = 2.0, style = "jenks", col = "lightblue", alpha = 1, border.col = "blue") +
+  tm_layout(frame = FALSE, legend.position = c("right", "top"), title = "Practices per 100 young people", legend.title.size = 1.0, legend.title.fontface = "bold")
 ```
-
-
 
 ```{r save bubble-map}
 
 ```
-
 
 
 ## Sources:
