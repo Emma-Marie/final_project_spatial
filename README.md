@@ -14,22 +14,26 @@ The output of this project is
 - a data set called ```waiting_midt.csv```, which is the project relevant data from each of the four data sets merged into one data set. Saved in ```data_output``` folder. 
 
 ## 2. Methods
-Spatial commands:
-- I used the function st_as_sf() to convert the "Midtjylland" data frame into a simple features (sf) object.
-- I projected the "Midtjylland" data by assigning it to the CRS connected to the EPSG code 25832 using st_transform(). This made me able to map on a 2D surface insteda of a 3D globe. The EPSG code is the one most commonly used for mapping Denmark. 
 
 I have create three figues consisting of four maps to shed light over the waiting time problem in Midtjylland. 
-- Figure 1 is a map created with ```Mapview``` and it's an interactive map which makes it possible to click on each municipality and get its name and some facts about the average, min and max waiting. The colours are ranging from red to blue and indicates the length of the waiting times. My biggest challenge using Mapview was to costumize the legend and chose the column values which I wanted to be shown when the user clicked on a municipality. 
-- Figure 2 is two maps: one showing the waiting times in each municipality, and one showing the size of the adult population (18-125 years). These maps makes it possible to investigate wether the municipalities with the longest waiting times are also the ones with the biggest population and vice versa. The maps are created with different ```tmap``` functions. 
-- Figure 3 is the waiting time map mentioned above, but bubbles are added using ```st_centroid()``` and ```tm_bubbles()``` to illustrate the number of citizens per practice in each municipality. This map makes it possible to investigate wether the municipalities with the longest waiting time are also the municipalities with the most people per practice and vice versa. I didn't manage to edit the title of the second legend (the one describing the bubble sizes), so the header is just the name of the column. 
+1) Figure 1 is a map created with ```Mapview``` and it's an interactive map which makes it possible to click on each municipality and get its name and some facts about the average, min and max waiting. The colours are ranging from red to blue and indicates the length of the waiting times. My biggest challenge using Mapview was to costumize the legend and chose the column values which I wanted to be shown when the user clicked on a municipality. 
 
-## 3. 
+2) Figure 2 is two maps: one showing the waiting times in each municipality, and one showing the size of the adult population (18-125 years). These maps makes it possible to investigate wether the municipalities with the longest waiting times are also the ones with the biggest population and vice versa. The maps are created with different ```tmap``` functions. 
+
+3) Figure 3 is the waiting time map mentioned above, but bubbles are added using ```tm_bubbles()``` to illustrate the number of citizens per practice in each municipality. This map makes it possible to investigate wether the municipalities with the longest waiting time are also the municipalities with the most people per practice and vice versa. I didn't manage to edit the title of the second legend (the one describing the bubble sizes), so the header is just the name of the column. 
+
+Other spatial commands:
+- I used the function ```st_as_sf()``` to convert the "Midtjylland" data frame into a simple features (sf) object.
+- I projected the "Midtjylland" data by assigning it to the CRS connected to the EPSG code 25832 using ```st_transform()```. This made me able to map on a 2D surface insteda of a 3D globe. The EPSG code is the one most commonly used for mapping Denmark. 
+- I found the centroid of each municipality with ```st_centroid()```. The centroids were used to place the bubbles in the center of each municipality. 
+
+## 3. Data
 In this project I have worked with four data sets:
+
 1) The ```municipalities``` data is from the GADM database. I use the geometry of each municipality in Denmark, and they are loaded directly from the database into the script in RStudion. 
 2) ```waitingtime_regionmidt.csv``` contains the average, maximum and minimum waiting times for each of the 19 municipalities in Midtjylland from November 1st, 2021. The numbers are from a report written by Region Midt in March 2022. The waiting times are measured in weeks. They apply to non-urgent patients who fall under cause 10 (light to moderate depression) or 11 (light to moderate anxiety) (Region Midtjylland 2022,4). I created the data set on my own by writing the data and the headings from the report into an excel document and saved it as a csv. The data has the following columns: "kommune" (municipalitiy), "Maksimum pr. 1. Nov 2021" (maximum November 1st, 2021), and "Minimum pr. 1. Nov 2021" (minimum November 1st, 2021). 
 3) The ```population_over_18.csv``` data set is from Danmarks Statistik. It contains the number of citizens from age 18-125  in the 19 municipalities in Midtjylland. I have chosen only the adult population, because the waiting times from waitingtime_regionmidt.csv only applies to persons older than 18, while the waiting time for children below 18 might be different. The population is from October 1st 2021. Following the link, you get to page “Folketal den 1. i kvartalet efter køn, tid, område og alder” (population on the 1s of the quarter by sex, time, area, and age) on dst.dk. To get the data, I selected all ages above 18, all municipalities in Region Midtjylland, "i alt" (total) in the "køn" (gender) box, and "“2021K4” (the 4th quarter of 2021) in the "Kvartal" (quarter) box. After I downloaded the data, I removed the word “år” (year) from each age so only the age number was left, because otherwise RStudio couldn't interpret the data (Danmarks Statistik 2021). 
 4) The data in the ```psycology_practices_2018.csv``` is from a report by Region Midtjylland (Region Midtjylland 2019, 12). I assembled the data set myself by writing the numbers from the report into an excel document and saving it as a csv. I named the headings “municipality” and “practices”. The numbers are from November 2018.  
-
 
 ### 3.1 How to get data 
 1) load the data directly from GADM with ```get_Data()```
