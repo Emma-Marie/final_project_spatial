@@ -2,11 +2,11 @@
 This is a repository for my final project in spatial analysis 2023. This repo will contain the data, scripts etc. use for creating the project. 
 
 ## 1. Description and purpose
-If you need a psychologist in Midtjylland, you might have to wait many months to get one. The many weeks of waiting can cause the mental issues of the waiting patients to worsen, which can result in the patient living with his or her issues for a longer peiod of time and maybee needing medical pf psykiatric treatment, which could have been avoided. The longer the patient is sick the more expensive it si for society to pay for this treatment, and it also costs society a lot of money in lost production (Flachs EM 2015, 163-195). The waiting time and thereby the risk of getting a more serious course of illness is not equally distributed through the municipalities, which makes the waiting time not only a problem for the individual patient, but also a problem of inequality. 
+If you need a psychologist in Midtjylland, you might have to wait many months to get one. The many weeks of waiting can cause the mental issues of the waiting patients to worsen, which can result in the patient living with his or her issues for a longer peiod of time and maybee needing medical pf psykiatric treatment, which could have been avoided (Ching-I Hung 2017, 7). The longer the patient is sick the more expensive it si for society to pay for this treatment, and it also costs society a lot of money in lost production (Flachs EM 2015, 163-195). The waiting time and thereby the risk of getting a more serious course of illness is not equally distributed through the municipalities, which makes the waiting time not only a problem for the individual patient, but also a problem of inequality. 
 
-The purpose of this project is to investigate the waiting times to see, which municipalities has the longest waiting times, and how many people live in these "vulnerable" areas and can therefore risk to be affected by the long waits.
+The purpose of this project is to use spatial tools to investigate the waiting times to see, which municipalities has the longest waiting times, and how many people live in these "vulnerable" areas and can therefore risk to be affected by the long waits. I expect that the municipalities with the longest waiting time also are the ones with the biggest population and the ones with the most people per psychology practice, because an imbalance between supply and demand could then explan why the waiting times vary from municipality to municipality. I create four different maps to investigate this hypothesis. 
 
-The output of this project is
+__Output:__ The output of this project is
 - 3 fugures (4 maps). Saved in ```map_output``` folder. 
 - a Rmarkdown file with the script made in RStudio. Saved in ```scripts``` folder. 
 - a HTML version of the Rmarkdown. Saved in ```scripts``` folder.
@@ -31,8 +31,11 @@ Other spatial commands:
 In this project I have worked with four data sets:
 
 1) The ```municipalities``` data is from the GADM database. I use the geometry of each municipality in Denmark, and they are loaded directly from the database into the script in RStudion. 
+
 2) ```waitingtime_regionmidt.csv``` contains the average, maximum and minimum waiting times for each of the 19 municipalities in Midtjylland from November 1st, 2021. The numbers are from a report written by Region Midt in March 2022. The waiting times are measured in weeks. They apply to non-urgent patients who fall under cause 10 (light to moderate depression) or 11 (light to moderate anxiety) (Region Midtjylland 2022,4). I created the data set on my own by writing the data and the headings from the report into an excel document and saved it as a csv. The data has the following columns: "kommune" (municipalitiy), "Maksimum pr. 1. Nov 2021" (maximum November 1st, 2021), and "Minimum pr. 1. Nov 2021" (minimum November 1st, 2021). 
+
 3) The ```population_over_18.csv``` data set is from Danmarks Statistik. It contains the number of citizens from age 18-125  in the 19 municipalities in Midtjylland. I have chosen only the adult population, because the waiting times from waitingtime_regionmidt.csv only applies to persons older than 18, while the waiting time for children below 18 might be different. The population is from October 1st 2021. Following the link, you get to page “Folketal den 1. i kvartalet efter køn, tid, område og alder” (population on the 1s of the quarter by sex, time, area, and age) on dst.dk. To get the data, I selected all ages above 18, all municipalities in Region Midtjylland, "i alt" (total) in the "køn" (gender) box, and "“2021K4” (the 4th quarter of 2021) in the "Kvartal" (quarter) box. After I downloaded the data, I removed the word “år” (year) from each age so only the age number was left, because otherwise RStudio couldn't interpret the data (Danmarks Statistik 2021). 
+
 4) The data in the ```psycology_practices_2018.csv``` is from a report by Region Midtjylland (Region Midtjylland 2019, 12). I assembled the data set myself by writing the numbers from the report into an excel document and saving it as a csv. I named the headings “municipality” and “practices”. The numbers are from November 2018.  
 
 ### 3.1 How to get data 
@@ -60,8 +63,12 @@ The required packages are installed when the script is run from the top. The pac
 The script ans the project is located in the ```scripts``` folder in the GitHub repository. The script should be loaded into RStudio and run from the top. 
 
 ## 5. Discussion of results 
+The empirical results and a critical evaluation can be found in the project report in the ```report``` folder. 
 
 ## 6. References
+Ching-I Hung et al.
+2017	”Untreated duration predicted the severity of depression at the two-year follow-up point”, PLoS ONE 12(9).  
+
 Danmarks Statistik
 2021	Population data, “Folk1A: Folketal den 1. i kvartaletefter område, køn, alder og civiltilstand”: https://www.statistikbanken.dk/statbank5a/selectvarval/define.aspPLanguage=0&subword=tabsel&MainTable=FOLK1A&PXSId=199114&tablestyle=&ST=SD&buttons=0 
  (visited 2023-06-02)
