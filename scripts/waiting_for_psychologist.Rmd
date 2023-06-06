@@ -1,0 +1,329 @@
+---
+title: "Waiting for a psychologist in Midtjylland"
+author: "Emma-Marie Vitskov Jørgensen"
+date: "28/03/2023 updated`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=TRUE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+
+## Purpose of the project
+If you need a psychologist in Midtjylland, you might have to wait for many months to get one. The long waiting period can cause the mental issues of the waiting patients to worsen, which can result in the patient living with his or her issues for a longer period of time and maybe needing medical or psychiatric treatment, which could have been avoided (Ching-I Hung 2017, 7). The longer the patient is sick the more expensive it is for society to pay for this treatment, and it also costs society a lot of money in lost production (Flachs EM 2015, 163-195). The waiting time and thereby the risk of getting a more serious course of illness is not equally distributed through the municipalities, which makes the waiting time issue problem of inequality. 
+
+## About the Data
+
+I use two data sets:
+  1) The first data set is a shape file from GADM, which I assign to the ```Midtjylland``` variable. It is a spatial data frame containing information about the municipalities in Denmark including the municipality polygons. 
+  2) The second data set ```waitingtime_regiionmidt.csv``` contains the waiting times in the municipalities in Midtjylland measured in weeks in 2021. The data is from a report from Region Midtjylland. 
+  3) The third data set ```population_over_18.csv``` consists of the adult population over age 18 in each municipality in Midtjylland in 2021. The data is from Danmarks Statistik.
+  4) The fourth data set ```psychology_practices_2018.csv``` contains data of the number of psychology practices in each municipality in Midtjylland in 2018. The data is from a report from Region Midtjylland. 
+  
+Data set 2-4 is saved in the ```data``` folder. 
+
+The pre-processing of the data is described in the project report in the ```report``` folder. 
+
+## Libraries
+
+```{r library}
+# packages needed for the script to run
+library(sf) 
+library(raster)
+library(dplyr)
+library(mapview)
+library(RColorBrewer)
+library(tmap)
+
+```
+
+
+## Load and prepare data
+
+### Municipality geometry data
+
+Loading the municipalities shape file from GADM. I project the data to the EPSG number 25832 with the ```st_as_sf()``` and check that the polygons are valid with ```sf::st_is_valid()```:
+
+```{r load-municipalities}
+#load data from GADM
+municipalities <-  getData("GADM", country = "DNK", level = 2)
+
+#check data type
+class(municipalities) # data is a SpatialPolygons DataFrame
+
+# project the data
+municipalities_25832 <- municipalities %>% 
+  st_as_sf(municipalities_25832) %>% 
+  st_transform(municipalities_25832, crs = 25832) 
+
+# inspecting the data
+municipalities_25832
+plot(municipalities_25832[7]) # plotting the municipalities geometry
+class(municipalities_25832) # sf and data frame
+
+# checking if the polygons are valid 
+sf::st_is_valid(municipalities_25832) # they are all valid
+
+```
+
+Then I filter the data by the ```NAME_1```column and only keep the data from the region "Midtjylland". I change the column name ```NAME_2``` to the more informative name "municipalities": 
+
+```{r Midtjylland-data}
+#checking NAME_1 column containing the regions
+municipalities_25832$NAME_1
+
+#creating new data frame containing only data for Midtjylland
+Midtjylland <- municipalities_25832[municipalities_25832$NAME_1 == 'Midtjylland',]
+
+#change "NAME_2" to "municipality"
+Midtjylland <- Midtjylland %>% 
+        rename( "municipality" = "NAME_2")
+
+# checking the spelling of the municipality names
+sort(unique(Midtjylland$municipality))
+
+# replacing "Århus" with "Aarhus" to match the other datasets
+Midtjylland$municipality[Midtjylland$municipality == "Århus"] <- "Aarhus"
+
+```
+
+### Waiting times data
+
+I load the ```waitingtime_regionmidt.csv```data set and inspecting it. I translate the danish column names into English with ```rename()``` and fix misspelling of Samsø and Ringkjøbing-Skjern:  
+
+```{r load-waitingtime}
+# load the waiting data
+waitingtime <- read.csv2("../data/waitingtime_regionmidt.csv")
+
+# Check column names
+head(waitingtime)
+
+# Translate column names from Danish to English
+waitingtime <- waitingtime %>% 
+        rename( "municipality" = "Kommune") %>% 
+        rename("average_wait" = "Gennemsnit.pr..1..Now.2021") %>% 
+        rename("max_wait" = "Maksimum.pr..1..Nov.2021") %>% 
+        rename("min_wait" = "Minimum.pr..1..Nov.2021")
+
+# Check spelling of municipality names
+sort(unique(waitingtime$municipality))
+
+# fixing misspelling due to danish special characters
+waitingtime$municipality[waitingtime$municipality == "Ringk\xbfbing-Skjern"] <- "Ringkøbing-Skjern"
+waitingtime$municipality[waitingtime$municipality == "Sams\xbf"] <- "Samsø"
+
+# Check data type
+class(waitingtime) # it's a data frame
+
+```
+### Population data
+
+I load the ```population_over_18.csv```data set without headers. I use ```colnames()``` to define column names for the data frame. Then I select the rows with the "Subtotal" values in the "age" column, and assign them to a separate variable, from which I remove the "age" column, which is not unnecessary. Lastly, I correct the spelling of Samsø and Ringkjøbing-Skjern. 
+
+```{r load-population}
+
+# load the waiting data
+population <- read.csv2("../data/population_over_18.csv", header=FALSE)
+
+# define column names
+colnames(population) <- c("municipality", "age", "population")
+
+# take only the "subtotal" rows (rows with total pop over 18 for each municipality) 
+total_population <- population[population$age == 'Subtotal',]
+
+# remove "age" column
+total_population_NoAge <- total_population[,-2]
+
+# check spelling of municipality names
+sort(unique(total_population$municipality))
+
+# fixing misspelling due to danish special characters
+total_population$municipality[total_population$municipality == "Ringk\xf8bing-Skjern"] <- "Ringkøbing-Skjern"
+total_population$municipality[total_population$municipality == "Sams\xf8"] <- "Samsø"
+
+```
+### Psychology practice data
+
+I load the ```psychology_practices_2018.csv``` data and correct the spelling of Samsø and Ringkjøbing-Skjern:
+
+```{r load-practices}
+
+# load practices data
+practices <- read.csv2("../data/psychology_practices_2018.csv")
+
+# Check spelling of municipality names
+sort(unique(practices$municipality))
+
+#fixing misspelling due to danish special characters
+practices$municipality[practices$municipality == "Ringk\xbfbing-Skjern"] <- "Ringkøbing-Skjern"
+practices$municipality[practices$municipality == "Sams\xbf"] <- "Samsø"
+
+```
+
+## Merge data frames
+
+Now,I merge the four data sets together with ```left_join()```. The data frames all share the column "municipalities" which contains the same municipality names, and that makes it possible to match the waiting times, the population size and the number of practices correctly:
+
+```{r merge-dataframes}
+
+# merge the two data frames
+waiting_midt <- Midtjylland %>% 
+  left_join(waitingtime) %>% 
+  left_join(total_population) %>% 
+  left_join(practices)
+
+```
+
+I add an extra column to the new data frame in which I calculate the number of citizens per psychology practice in each municipality:
+
+```{r relative-practices}
+
+# calculate number of persons per practice and create new column
+waiting_midt$population_per_practice = waiting_midt$population/waiting_midt$practices
+
+```
+
+
+Save the new merged data set in the ```data_output``` folder:
+
+```{r save-merged-data}
+
+setwd('..') # changing position
+readr::write_csv(waiting_midt,"data_output/waiting_midt.csv") 
+
+```
+
+## Mapping
+
+### Mapview: Which municipalities have the longest waiting times?
+
+Now that the data is ready, I will investigate the waiting time in each of the 19 municipalities in Midtjylland. I found, that the best way to do this was to map the waiting times with ```mapview()``` to create a interactive map:
+
+```{r plot-waiting}
+# plot waiting times using mapview
+waiting_mapview <- mapview(waiting_midt[c(7, 14, 15, 16)], zcol = "average_wait", col.regions=rev(brewer.pal(10, "RdBu")))
+
+# show map
+waiting_mapview
+
+```
+
+Save Mapview map as HTML:
+
+```{r save_mapview}
+
+mapshot(waiting_mapview, "../map_output/waiting_mapview.html")
+
+```
+
+
+### Tmap: Are there coincidence between waiting time and population size?
+
+In this part of the project, I will examine if there is a correlation between long waiting time and a high number of people living in the municipality and vice versa. I do this by creating two maps with ```Tmap```: one showing the distribution of waiting times and one showing the population sizes across municipalities:
+
+```{r pop-and-wait-plot}
+
+# Mapping the population (over 18 years) of each municipality
+population_map <- tm_shape(waiting_midt["population"]) + 
+  tm_polygons("population", palette = "YlGn", title = "Population (over age 18)", style = "jenks") +
+  tm_layout(frame = FALSE, legend.position = c("right", "bottom"), main.title = "Fig 2: Waiting time and population size doesn't seem to correlate in all municipalities", main.title.position = "center", main.title.size = 1.1) 
+
+# Mapping the waiting times of each municipality
+average_waiting_map <- tm_shape(waiting_midt["average_wait"]) + 
+  tm_polygons("average_wait", palette = "Reds", title = "Waiting time (weeks)", style = "jenks") +
+  tm_layout(frame = FALSE, legend.position = c("right", "bottom")) 
+  
+# Show the two maps
+population_map
+average_waiting_map
+
+```
+
+Save the maps on top of each other as one figure:
+
+```{r save-tmaps}
+
+# Save the two maps in the same pdf
+pdf("../map_output/waiting_and_population_maps")
+
+# arrange the maps together
+tmap_arrange(population_map, average_waiting_map)
+
+dev.off()
+
+```
+
+### tm-bubbles: Are there coincidence between waiting time and population per practice?
+
+The purpose of the last map I'm creating is to investigate whether the municipalities with the longest waiting times are also the once with the most people per psychology practice connected to the public health insurance and vice versa. I create a waiting time map as above, but add an extra element to it. I find the centroid of each municipality with ```st_centroid()``` and in the the centroids I create a bubble using ```tm_bubbles()```. The size of each bubble represents the number of people per psychology practice in the given municipality:
+
+```{r practices-bubbles}
+
+# create centroid for each municipality
+centroids <- st_centroid(waiting_midt)
+
+# use tmap to create a bubble (connected to each centroid) with a size corresponding to the number of practices
+practices_map <- tm_shape(waiting_midt) + 
+  tm_polygons("average_wait", palette = "Reds", title = "Waiting time in weeks", style = "jenks") +
+  tm_layout(frame = FALSE, legend.position = c("right", "bottom")) +
+  tm_shape(centroids) +
+  tm_bubbles(size = "population_per_practice", scale = 2.5, style = "jenks", col = "lightblue", alpha = 1, border.col = "blue") +
+  tm_layout(frame = FALSE, legend.position = c("right", "bottom"), main.title = "Fig 3: Long wait doesn't seem to correlate with many persons per practice", main.title.position = "center", main.title.size = 1.2, legend.title.size = 1.0, legend.title.fontface = "bold")
+
+# show map
+practices_map
+
+```
+
+
+Save the map:
+
+```{r save bubble-map}
+
+# Save bubble-map
+tmap_save(practices_map, "../map_output/relative_practizes_map.png")
+
+```
+
+### Final notes
+I discuss the results of this project in the project report, which can be accessed through the ```report``` folder on Github. 
+
+## References:
+Ching-I Hung et al.
+2017	”Untreated duration predicted the severity of depression at the two-year follow-up point”, PLoS ONE 12(9).  
+
+Demarsylvain
+2019	“How do I combine a dataframe with a spatial dataframe when receiving errors with both left_join and merge?”, Stackoverflow: https://stackoverflow.com/questions/56116443/how-do-i-combine-a-dataframe-with-a-spatial-dataframe-when-receiving-errors-with (visited 2023-06-04)
+
+Flachs EM et al. 
+2015	“Sygdomsbyrden i Danmark - sygdomme”, Statens institut for folkesundhed, Syddansk Universitet, København: Sundhedsstyrelsen, 163-195: https://www.sst.dk/da/sygdom-og-behandling/~/media/00C6825B11BD46F9B064536C6E7DFBA0.ashx 
+
+Kabacoff, Robert I.
+2017	“Merging data”, Quick-R: https://www.statmethods.net/management/merging.html  
+
+Marco Sandri
+2020	“Add Color Palette to Mapview Map”, Stackoberflow: https://stackoverflow.com/questions/60099307/add-color-palette-to-mapview-map (visited 2023-05-20)
+
+Naveen
+2023	“How to rename column in R”, SparkBy{Examples}: https://sparkbyexamples.com/r-programming/rename-column-in-r/ (visited 2023-05-20) 
+
+UseR10085
+2020	“How to put title of a map outside of the panel (tmap package)”, Stackoverflow: https://stackoverflow.com/questions/61355422/how-to-put-title-of-a-map-outside-of-the-panel-tmap-package (visited 2023-05-30)
+
+Whatlf
+2022	”How do I stop r from using the first row of data as the column name?”, Stackoverflow: https://stackoverflow.com/questions/72958558/how-do-i-stop-r-from-using-the-first-row-of-data-as-the-column-name (visited 2023-06-02)
