@@ -10,7 +10,7 @@ __Output:__ The output of this project is
 - 3 fugures (4 maps). Saved in ```map_output``` folder. 
 - a Rmarkdown file with the script made in RStudio. Saved in ```scripts``` folder. 
 - a HTML version of the Rmarkdown. Saved in ```scripts``` folder.
-- the project report. Saved in ```report``` folder. 
+- the project report.
 - a data set called ```waiting_midt.csv```, which is the project relevant data from each of the four data sets merged into one data set. Saved in the ```data_output``` folder. 
 
 ## 2. Methods
@@ -64,7 +64,7 @@ The required packages are installed when the script is run from the top. The pac
 The script and the Rstudion project is located in the ```scripts``` folder in the GitHub repository. The script and project should be loaded into RStudio and run from the top. 
 
 ## 5. Discussion of results 
-The empirical results and a critical evaluation can be found in the project report in the ```report``` folder. 
+The empirical results and a critical evaluation can be found in the project report. 
 
 ## 6. References
 Ching-I Hung et al.
