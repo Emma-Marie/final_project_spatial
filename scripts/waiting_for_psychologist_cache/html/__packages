@@ -1,0 +1,9 @@
+knitr
+rmdformats
+sf
+sp
+raster
+dplyr
+mapview
+RColorBrewer
+tmap
