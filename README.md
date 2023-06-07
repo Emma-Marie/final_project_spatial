@@ -42,7 +42,7 @@ In this project, I have worked with four data sets:
 ### 3.1 How to get data 
 1) load the ```gadm36_DNK_2_sp.rds``` data directly from GADM with ```get_Data()```
       
-      getData("GADM", country = "DNK", level = 2)
+       getData("GADM", country = "DNK", level = 2)
       
 2-4) Data set 2-4 are saved in the ```data``` folder in the GitHub repository. They are loaded into the script with the function ```read.csv2()```. 
 
