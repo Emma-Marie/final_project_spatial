@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 author:
-  family-names: "Jørgensen"
-  given-names: "Emma-Marie Vitskov"
+  - family-names: "Jørgensen"
+    given-names: "Emma-Marie Vitskov"
 title: "Waiting for a psychologist in Midtjylland"
 version: 1.0.0
 date-released: 2023-06-07
